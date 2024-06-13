@@ -23,8 +23,3 @@ async def process_voice_message(message: Message, bot: Bot):
     voice_file = FSInputFile("speech.mp3")
     await bot.send_voice(chat_id=message.chat.id, voice=voice_file, caption="Вот ваш ответ!")
     os.remove(voice_path)
-
-@router.message(Command('voice'))
-async def voice(message: Message, bot: Bot):
-    voice_file = FSInputFile("speech.mp3")
-    await bot.send_voice(chat_id=message.chat.id, voice=voice_file, caption="Вот ваше голосовое сообщение!")
