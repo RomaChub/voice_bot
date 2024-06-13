@@ -1,8 +1,8 @@
 import os
 
-from aiogram.types import Message, Voice, File, InputMediaAudio, InputFile, FSInputFile
-from aiogram import Router, F, Bot, types, methods
-from aiogram.filters import CommandStart, Command
+from aiogram.types import Message,FSInputFile
+from aiogram import Router, F, Bot
+from aiogram.filters import CommandStart
 
 from bot.utils import save_voice_as_mp3, audio_to_text, get_response_from_openai, text_to_speech
 

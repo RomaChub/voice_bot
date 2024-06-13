@@ -1,9 +1,8 @@
 import time
-from pathlib import Path
 
 import openai
-from aiogram import Bot, types
-from aiogram.types import Message, FSInputFile
+from aiogram import Bot
+from aiogram.types import Message
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
