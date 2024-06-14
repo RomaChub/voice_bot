@@ -5,11 +5,12 @@ from aiogram import Bot
 from aiogram.types import Message
 import os
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
-client = OpenAI()
+client = AsyncOpenAI()
+user_id_and_asistent_id = {}
 
 
 async def save_voice_as_mp3(bot: Bot, message: Message):
@@ -24,22 +25,26 @@ async def save_voice_as_mp3(bot: Bot, message: Message):
 
 async def audio_to_text(file_path: str) -> str:
     with open(file_path, "rb") as audio_file:
-        transcript = client.audio.transcriptions.create(
+        transcript = await client.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file
         )
     return str(transcript)
 
 
-async def get_response_from_openai(text: str) -> str:
-    assistant = client.beta.assistants.create(
-        name="Assistant",
-        description="You are a helpful assistant.You should to answer questions",
-        model="gpt-3.5-turbo",
-        tools=[]
-    )
+async def get_response_from_openai(user_id, text: str) -> str:
+    if user_id in user_id_and_asistent_id:
+        assistant = await client.beta.assistants.retrieve(user_id_and_asistent_id[user_id])
+    else:
+        assistant = await client.beta.assistants.create(
+            name="Assistant",
+            description="You are a helpful assistant.You should to answer questions",
+            model="gpt-3.5-turbo",
+            tools=[]
+        )
+        user_id_and_asistent_id[user_id] = assistant.id
 
-    thread = client.beta.threads.create(
+    thread = await client.beta.threads.create(
         messages=[
             {
                 "role": "user",
@@ -48,13 +53,12 @@ async def get_response_from_openai(text: str) -> str:
         ]
     )
 
-    run = client.beta.threads.runs.create(
+    run = await client.beta.threads.runs.create(
         thread_id=thread.id,
         assistant_id=assistant.id
     )
     while True:
-        run_status = client.beta.threads.runs.retrieve(thread_id=thread.id,
-                                                       run_id=run.id)
+        run_status = await client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
         if run_status.status == "completed":
             break
         elif run_status.status == "failed":
@@ -62,7 +66,7 @@ async def get_response_from_openai(text: str) -> str:
             break
         time.sleep(5)
 
-    messages = client.beta.threads.messages.list(
+    messages = await client.beta.threads.messages.list(
         thread_id=thread.id
     )
 
@@ -82,10 +86,15 @@ async def get_response_from_openai(text: str) -> str:
 
 async def text_to_speech(text):
     speech_file_path = "speech.mp3"
-    response = client.audio.speech.create(
+    response = await client.audio.speech.create(
         model="tts-1",
         voice="alloy",
         input=text
     )
     response.stream_to_file(speech_file_path)
     return speech_file_path
+
+
+async def new_session(user_id):
+    del user_id_and_asistent_id[user_id]
+
