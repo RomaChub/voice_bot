@@ -10,7 +10,6 @@ from openai import AsyncOpenAI
 load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 client = AsyncOpenAI()
-user_id_and_asistent_id = {}
 
 
 async def save_voice_as_mp3(bot: Bot, message: Message):
@@ -32,9 +31,9 @@ async def audio_to_text(file_path: str) -> str:
     return str(transcript)
 
 
-async def get_response_from_openai(user_id, text: str) -> str:
-    if user_id in user_id_and_asistent_id:
-        assistant = await client.beta.assistants.retrieve(user_id_and_asistent_id[user_id])
+async def get_response_from_openai(text: str) -> str:
+    if os.getenv('ASSISTANT_ID') != 'no_id':
+        assistant = await client.beta.assistants.retrieve(os.getenv('ASSISTANT_ID'))
     else:
         assistant = await client.beta.assistants.create(
             name="Assistant",
@@ -42,7 +41,7 @@ async def get_response_from_openai(user_id, text: str) -> str:
             model="gpt-3.5-turbo",
             tools=[]
         )
-        user_id_and_asistent_id[user_id] = assistant.id
+        os.environ['ASSISTANT_ID'] = assistant.id
 
     thread = await client.beta.threads.create(
         messages=[
@@ -93,8 +92,3 @@ async def text_to_speech(text):
     )
     response.stream_to_file(speech_file_path)
     return speech_file_path
-
-
-async def new_session(user_id):
-    del user_id_and_asistent_id[user_id]
-
