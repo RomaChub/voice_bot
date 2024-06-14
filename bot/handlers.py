@@ -16,7 +16,6 @@ async def start(message: Message):
 
 @router.message(F.content_type == "voice")
 async def process_voice_message(message: Message, bot: Bot):
-    user_id = message.from_user.id
     voice_path = await save_voice_as_mp3(bot, message)  # получение гс
     transcripted_voice_text = await audio_to_text(voice_path)  # транскрипция гс
     answer = await get_response_from_openai(transcripted_voice_text)  # получение ответа от гпт
