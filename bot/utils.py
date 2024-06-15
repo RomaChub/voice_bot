@@ -45,13 +45,10 @@ class Utils:
             )
             settings.assistant_id = assistant.id
 
-        thread_id = settings.thread_id
         assistant_id = settings.assistant_id
 
-        if thread_id is None or thread_id == "no_id":
-            thread = await client.beta.threads.create()
-            thread_id = thread.id
-            settings.thread_id = thread_id
+        thread = await client.beta.threads.create()
+        thread_id = thread.id
 
         await client.beta.threads.messages.create(thread_id=thread_id,
                                                   role="user",
