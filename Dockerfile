@@ -14,6 +14,9 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+RUN alembic revision --autogenerate
+
+RUN alembic upgrade head
 
 RUN python main.py
 
