@@ -4,9 +4,9 @@ ENV PYTHONUNBUFFERED=1 \
   PIP_DISABLE_PIP_VERSION_CHECK=on \
   PIP_DEFAULT_TIMEOUT=100 \
   POETRY_VERSION=1.7.0 \
-  PYTHONPATH=/app
+  PYTHONPATH=/voice_bot
 
-WORKDIR /app
+WORKDIR /voice_bot
 
 
 COPY requirements.txt requirements.txt
@@ -15,5 +15,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN python main.py 
+RUN python main.py
 
