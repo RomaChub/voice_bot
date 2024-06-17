@@ -8,7 +8,6 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
-    load_dotenv()
     telegram_token: str = os.getenv("TELEGRAM_TOKEN")
     openai_api_key: str = os.getenv("OPENAI_API_KEY")
 
