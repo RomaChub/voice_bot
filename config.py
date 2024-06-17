@@ -17,8 +17,6 @@ class Settings(BaseSettings):
 
     postgres_volume_path: str = Field("postgres_volume_path", env="POSTGRES_VOLUME_PATH")
 
-    model_config = SettingsConfigDict(env_file='.env')
-
     @property
     def get_database_url(self):
         return f"postgresql+asyncpg://{self.db_user}:{self.db_pass}@{self.db_host}:{self.db_port}/{self.db_name}"
