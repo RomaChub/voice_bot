@@ -1,21 +1,26 @@
+import os
+
+from dotenv import load_dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+load_dotenv()
+
 
 class Settings(BaseSettings):
-    telegram_token: str = Field("telegram_token", env="TELEGRAM_TOKEN")
-    openai_api_key: str = Field("openai_api_key", env="OPENAI_API_KEY")
+    telegram_token: str = Field(os.getenv("TELEGRAM_TOKEN"), env="TELEGRAM_TOKEN")
+    openai_api_key: str = Field(os.getenv("OPENAI_API_KEY"), env="OPENAI_API_KEY")
 
-    db_host: str = Field("db_host", env="DB_HOST")
-    db_port: int = Field(11943, env="DB_PORT")
-    db_name: str = Field("db_name", env="DB_NAME")
-    db_user: str = Field("db_user", env="DB_USER")
-    db_pass: str = Field("db_pass", env="DB_PASS")
+    db_host: str = Field(os.getenv("DB_HOST"), env="DB_HOST")
+    db_port: int = Field(os.getenv("DB_PORT"), env="DB_PORT")
+    db_name: str = Field(os.getenv("DB_NAME"), env="DB_NAME")
+    db_user: str = Field(os.getenv("DB_USER"), env="DB_USER")
+    db_pass: str = Field(os.getenv("DB_PASS"), env="DB_PASS")
 
-    assistant_id: str = Field("assistant_id", env="ASSISTANT_ID")
-    value_assistant_id: str = Field("value_assistant_id", env="VALUE_ASSISTANT_ID")
+    assistant_id: str = Field(os.getenv("ASSISTANT_ID"), env="ASSISTANT_ID")
+    value_assistant_id: str = Field(os.getenv("VALUE_ASSISTANT_ID"), env="VALUE_ASSISTANT_ID")
 
-    postgres_volume_path: str = Field("postgres_volume_path", env="POSTGRES_VOLUME_PATH")
+    postgres_volume_path: str = Field(os.getenv("POSTGRES_VOLUME_PATH"), env="POSTGRES_VOLUME_PATH")
 
     @property
     def get_database_url(self):
