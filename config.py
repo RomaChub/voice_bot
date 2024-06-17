@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     openai_api_key: str = Field("openai_api_key", env="OPENAI_API_KEY")
 
     db_host: str = Field("db_host", env="DB_HOST")
-    db_port: int = Field("db_port", env="DB_PORT")
+    db_port: str = Field("db_port", env="DB_PORT")
     db_name: str = Field("db_name", env="DB_NAME")
     db_user: str = Field("db_user", env="DB_USER")
     db_pass: str = Field("db_pass", env="DB_PASS")
