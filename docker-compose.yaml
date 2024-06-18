@@ -13,9 +13,6 @@ services:
       - DB_PORT:=5432
     depends_on:
       - migrations
-    command: [
-    "python", "main.py"
-    ]
 
   postgres:
     image: postgres:13.1
@@ -48,9 +45,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: [
-      "alembic", "upgrade", "head",
-    ]
 
 networks:
   default:

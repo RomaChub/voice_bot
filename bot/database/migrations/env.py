@@ -10,6 +10,8 @@ from config import settings
 from bot.database.database import ValueOrm
 from bot.database.database import Base
 
+from dotenv import load_dotenv
+load_dotenv()
 
 config = context.config
 

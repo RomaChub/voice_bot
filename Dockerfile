@@ -8,11 +8,11 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /voice_bot
 
-
 COPY requirements.txt requirements.txt
-
-RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN python main.py
+COPY start.sh /voice_bot/start.sh
+RUN chmod +x /voice_bot/start.sh
+
+CMD ["./start.sh"]
