@@ -1,8 +1,9 @@
+from sqlalchemy import AsyncAdaptedQueuePool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from config import settings
 
-engine = create_async_engine(settings.get_database_url)
+engine = create_async_engine(settings.get_database_url, poolclass=AsyncAdaptedQueuePool)
 new_session = async_sessionmaker(engine, expire_on_commit=False)
 
 

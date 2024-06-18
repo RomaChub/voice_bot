@@ -74,4 +74,5 @@ async def process_voice_for_value(message: Message, state: FSMContext, bot: Bot)
         voice_file = FSInputFile("speech.mp3")
         await bot.send_voice(chat_id=message.chat.id, voice=voice_file, caption="Вот ваш ответ!")
         os.remove(voice_path)
+
         await processing_message.delete()

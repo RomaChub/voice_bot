@@ -13,10 +13,9 @@ client = AsyncOpenAI()
 
 
 async def save_value(core_value: str, user_id: str):
-    value = SValueAdd(core_value=core_value, user_id=user_id)
+    value = ValueOrm(core_value=core_value, user_id=user_id)
     async with new_session() as session:
-        value_dict = value.model_dump()
-        value_orm = ValueOrm(**value_dict)
+        value_orm = value
         session.add(value_orm)
         await session.flush()
         await session.commit()
@@ -109,7 +108,7 @@ class Utils:
                         "type": "object",
                         "properties": {
                             "correct": {
-                                "type": "string",
+                                "type": "boolean",
                                 "description": "True or False",
                             },
                         },
@@ -128,7 +127,8 @@ class Utils:
         arguments_json = response.choices[0].message.tool_calls[0].function.arguments
         arguments_dict = json.loads(arguments_json)
         correct = arguments_dict.get("correct")
-        if correct == "True":
+        print(correct)
+        if correct == True:
             return True
         else:
             return False
@@ -194,7 +194,7 @@ class Utils:
                 arguments = tool_calls[i].function.arguments
                 arguments_json = json.loads(arguments)
                 core_value = core_value + " " + arguments_json.get("core_value")
-
+            print(core_value)
             if await cls.answer_validation(str(core_value)):
                 await save_value(core_value, user_id)
                 return str(core_value)
