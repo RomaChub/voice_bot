@@ -1,4 +1,7 @@
+import base64
+
 import openai
+import requests
 from aiogram import Bot
 from aiogram.types import Message
 from dotenv import load_dotenv
@@ -19,6 +22,11 @@ async def save_value(core_value: str, user_id: str):
         session.add(value_orm)
         await session.flush()
         await session.commit()
+
+
+async def encode_image(image_path: str):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
 
 
 class Utils:
@@ -202,3 +210,44 @@ class Utils:
                 return "Failed"
 
         return "Failed"
+
+    @classmethod
+    async def save_photo(cls, message) -> str:
+        file_id = message.from_user.id
+        file_name = f"files/photo{file_id}.jpg"
+        await message.bot.download(file=message.photo[-1].file_id, destination=file_name)
+        return file_name
+
+    @classmethod
+    async def detect_mood(cls, file_name: str) -> str:
+        base64_image = await encode_image(file_name)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {settings.openai_api_key}"
+        }
+
+        payload = {
+            "model": "gpt-4o",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Определи настроение по фото."
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "max_tokens": 300
+        }
+
+        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+        answer = response.json()
+        return answer['choices'][0]['message']['content']

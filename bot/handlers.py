@@ -75,4 +75,24 @@ async def process_voice_for_value(message: Message, state: FSMContext, bot: Bot)
         await bot.send_voice(chat_id=message.chat.id, voice=voice_file, caption="Вот ваш ответ!")
         os.remove(voice_path)
 
-        await processing_message.delete()
+    await processing_message.delete()
+
+
+@router.message(F.content_type == "photo")
+async def process_photo(message: Message, state: FSMContext, bot: Bot):
+    await state.set_state(VoiceState.AWAITING_QUESTION)
+    processing_message = await message.answer("Подождите, я обрабатываю вашу фотографию...")
+    file_name = await Utils.save_photo(message)
+    answer = await Utils.detect_mood(file_name)
+    await processing_message.delete()
+    os.remove(file_name)
+    await message.answer(answer)
+
+
+
+
+
+
+
+
+
