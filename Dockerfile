@@ -14,8 +14,8 @@ COPY . .
 
 COPY start.sh /voice_bot/start.sh
 
-RUN python3 -m venv venv
-RUN source /voice_bot/venv/bin/activate
+RUN python3 -m venv /voice_bot/venv
+RUN /bin/bash -c "source /voice_bot/venv/bin/activate"
 
 RUN chmod +x /voice_bot/start.sh
 
