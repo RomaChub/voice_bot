@@ -10,6 +10,7 @@ load_dotenv()
 class Settings(BaseSettings):
     telegram_token: str = os.getenv("TELEGRAM_TOKEN")
     openai_api_key: str = os.getenv("OPENAI_API_KEY")
+    amplitude_api_key: str = os.getenv("AMPLITUDE_API_KEY")
 
     db_host: str = os.getenv("DB_HOST")
     db_port: int = os.getenv("DB_PORT")
