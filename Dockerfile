@@ -13,6 +13,10 @@ COPY requirements.txt requirements.txt
 COPY . .
 
 COPY start.sh /voice_bot/start.sh
+
+RUN python3 -m venv venv
+RUN source venv/bin/activate
+
 RUN chmod +x /voice_bot/start.sh
 
 CMD ["./start.sh"]
