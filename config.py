@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     db_user: str = os.getenv("DB_USER")
     db_pass: str = os.getenv("DB_PASS")
 
+    redis_host: str = os.getenv("REDIS_HOST")
+    redis_port: int = os.getenv("REDIS_PORT")
+    redis_db: int = os.getenv("REDIS_DB")
+    redis_username: str = os.getenv("REDIS_USERNAME")
+    redis_pass: str = os.getenv("REDIS_PASS")
+
     assistant_id: str = os.getenv("ASSISTANT_ID")
     value_assistant_id: str = os.getenv("VALUE_ASSISTANT_ID")
 

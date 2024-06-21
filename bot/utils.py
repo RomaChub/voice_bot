@@ -1,15 +1,14 @@
 import base64
 
 import openai
-import requests
 from aiogram import Bot
 from aiogram.types import Message
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 import json
-from bot.database.shemas import SValueAdd
 from config import settings
 from bot.database.database import ValueOrm, new_session
+from aiogram.fsm.context import FSMContext
 
 load_dotenv()
 client = AsyncOpenAI()
@@ -53,43 +52,78 @@ class Utils:
         return str(transcript)
 
     @classmethod
-    async def get_response_from_openai(cls, text: str) -> str:
+    async def get_response_from_openai(cls, text: str, state: FSMContext) -> str:
         if settings.assistant_id != "no_id":
             assistant = await client.beta.assistants.retrieve(settings.assistant_id)
         else:
             assistant = await client.beta.assistants.create(
                 name="Assistant",
-                description="You are a helpful assistant.You should to answer questions",
-                model="gpt-3.5-turbo",
-                tools=[]
+                description="Ты дружелюбный ассистент имеющий данные о тревожности",
+                model="gpt-4o",
+                tools=[{"type": "file_search"}]
             )
+
+            vector_store = await client.beta.vector_stores.create(
+                name="Тревожность"
+            )
+            file_paths = ["bot/data_files/file_1.docx"]
+            file_streams = [open(path, "rb") for path in file_paths]
+
+            file_batch = await client.beta.vector_stores.file_batches.upload_and_poll(
+                vector_store_id=vector_store.id, files=file_streams
+            )
+
+            assistant = await client.beta.assistants.update(
+                assistant_id=assistant.id,
+                tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+            )
+
             settings.assistant_id = assistant.id
 
         assistant_id = settings.assistant_id
 
-        thread = await client.beta.threads.create()
+        message_file = await client.files.create(
+            file=open("bot/data_files/file_1.docx", "rb"), purpose="assistants"
+        )
+
+        thread = await client.beta.threads.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": f""" Вопрос: {text}
+                                    Найди ответ в приложенном файле, указав название файла в ответе.
+                                    Если ответ не найден в файле, просто ответь на вопрос, не указывая названия файла.
+                                """,
+                    "attachments": [
+                        {"file_id": message_file.id, "tools": [{"type": "file_search"}]}
+                    ],
+                }
+            ]
+        )
         thread_id = thread.id
 
-        await client.beta.threads.messages.create(thread_id=thread_id,
-                                                  role="user",
-                                                  content=f"Ответь на вопрос :{text}")
+        await state.update_data(thread_id=thread_id)
 
         run = await client.beta.threads.runs.create_and_poll(
             thread_id=thread_id,
-            assistant_id=assistant_id,
-            poll_interval_ms=5000)
-
+            assistant_id=assistant_id)
         if run.status in ['requires_action', 'running', 'queued', 'failed', 'canceled', 'timed_out']:
             return str("Please, repeat the question.")
         if run.status == str("completed"):
-            messages = await client.beta.threads.messages.list(thread_id=thread_id)
+            messages = await client.beta.threads.messages.list(thread_id=thread_id, run_id=run.id)
             message_content = messages.data[0].content[0].text
             annotations = message_content.annotations
+
+            try:
+                file_name = "Ответ взят из файла: " + annotations[0].text[5:16]
+            except IndexError:
+                file_name = ""
 
             for annotation in annotations:
                 message_content.value = message_content.value.replace(annotation.text, '')
 
             response_message = message_content.value
+            print(response_message + "\n" + file_name)
             return str(response_message)
 
     @classmethod
@@ -136,7 +170,7 @@ class Utils:
         arguments_dict = json.loads(arguments_json)
         correct = arguments_dict.get("correct")
         print(correct)
-        if correct == True:
+        if correct:
             return True
         else:
             return False
@@ -221,33 +255,25 @@ class Utils:
     @classmethod
     async def detect_mood(cls, file_name: str) -> str:
         base64_image = await encode_image(file_name)
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.openai_api_key}"
-        }
-
-        payload = {
-            "model": "gpt-4o",
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "Определи настроение по фото."
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}"
-                            }
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Определи настроение по фото."
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{base64_image}"
                         }
-                    ]
-                }
-            ],
-            "max_tokens": 300
-        }
-
-        response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-        answer = response.json()
-        return answer['choices'][0]['message']['content']
+                    }
+                ]
+            }
+        ]
+        response = await client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages
+        )
+        return response.choices[0].message.content
