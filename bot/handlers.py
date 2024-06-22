@@ -31,6 +31,7 @@ async def help(message: Message, state: FSMContext):
         "Вот команды, которые я поддерживаю:\n"
         "/start - начать работу с ботом\n"
         "/my_value - помогу найти твою ценность\n"
+        "Так же в любой момент пришли мне фото и я определю твое настроение\n"
     )
     await message.answer(help_text)
 
