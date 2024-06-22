@@ -115,7 +115,7 @@ class Utils:
             annotations = message_content.annotations
 
             try:
-                file_name = "Ответ взят из файла: " + annotations[0].text[5:16]
+                file_name = "Ответ взят из файла: " + annotations[0].text
             except IndexError:
                 file_name = ""
 
@@ -123,8 +123,7 @@ class Utils:
                 message_content.value = message_content.value.replace(annotation.text, '')
 
             response_message = message_content.value
-            print(response_message + "\n" + file_name)
-            return str(response_message)
+            return str(response_message + "\n" + file_name)
 
     @classmethod
     async def text_to_speech(cls, text: str):
