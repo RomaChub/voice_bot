@@ -1,11 +1,8 @@
 from aiogram import Bot, Dispatcher
 import asyncio
 
-from config import settings
+from config import settings, storage
 from bot.handlers import router
-from aiogram.fsm.storage.redis import RedisStorage
-
-storage = RedisStorage.from_url(f"redis://{settings.redis_username}:{settings.redis_pass}@{settings.redis_host}:{settings.redis_port}/{settings.redis_db}")
 
 
 async def main():

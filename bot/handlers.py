@@ -45,12 +45,12 @@ async def process_voice_message(message: Message, state: FSMContext, bot: Bot):
     transcripted_voice_text = await Utils.audio_to_text(voice_path)
 
     answer = await Utils.get_response_from_openai(transcripted_voice_text, state)
+    os.remove(voice_path)
 
     await Utils.text_to_speech(answer)
 
     voice_file = FSInputFile("speech.mp3")
     await bot.send_voice(chat_id=message.chat.id, voice=voice_file, caption="Вот ваш ответ!")
-    os.remove(voice_path)
     await processing_message.delete()
 
 

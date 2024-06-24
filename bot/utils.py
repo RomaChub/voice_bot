@@ -39,7 +39,6 @@ class Utils:
         file_path = file.file_path
         file_name = f"files/audio{file_id}.mp3"
         voice_mp3_path = await bot.download_file(file_path, file_name)
-
         return file_name
 
     @classmethod
@@ -66,10 +65,10 @@ class Utils:
             vector_store = await client.beta.vector_stores.create(
                 name="Тревожность"
             )
-            file_paths = ["bot/data_files/file_1.docx"]
+            file_paths = ["bot/data_files/file_1.docx"] # сюда добавлять имена файлов
             file_streams = [open(path, "rb") for path in file_paths]
 
-            file_batch = await client.beta.vector_stores.file_batches.upload_and_poll(
+            await client.beta.vector_stores.file_batches.upload_and_poll(
                 vector_store_id=vector_store.id, files=file_streams
             )
 
@@ -82,31 +81,36 @@ class Utils:
 
         assistant_id = settings.assistant_id
 
-        message_file = await client.files.create(
-            file=open("bot/data_files/file_1.docx", "rb"), purpose="assistants"
-        )
+        data = await state.get_data()
+        thread_id = data.get("thread_id")
 
-        thread = await client.beta.threads.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": f""" Вопрос: {text}
-                                    Найди ответ в приложенном файле, указав название файла в ответе.
-                                    Если ответ не найден в файле, просто ответь на вопрос, не указывая названия файла.
-                                """,
-                    "attachments": [
-                        {"file_id": message_file.id, "tools": [{"type": "file_search"}]}
-                    ],
-                }
-            ]
-        )
-        thread_id = thread.id
-
-        await state.update_data(thread_id=thread_id)
-
+        if not thread_id:
+            thread = await client.beta.threads.create(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f""" Вопрос: {text} ?
+                                        Найди ответ в приложенном файле.
+                                        Если ответ не найден в файле, просто ответь на вопрос, не указывая названия файла.
+                                        """
+                    }
+                ]
+            )
+            thread_id = thread.id
+            await state.update_data(thread_id=thread_id)
+        else:
+            thread = await client.beta.threads.messages.create(
+                thread_id=thread_id,
+                role="user",
+                content=f""" Вопрос: {text}
+                             Найди ответ в приложенном файле.
+                             Если ответ не найден в файле, просто ответь на вопрос, не указывая названия файла.
+                             """
+            )
         run = await client.beta.threads.runs.create_and_poll(
             thread_id=thread_id,
             assistant_id=assistant_id)
+
         if run.status in ['requires_action', 'running', 'queued', 'failed', 'canceled', 'timed_out']:
             return str("Please, repeat the question.")
         if run.status == str("completed"):
@@ -115,15 +119,16 @@ class Utils:
             annotations = message_content.annotations
 
             try:
-                file_name = "Ответ взят из файла: " + annotations[0].text
+                file_id = annotations[0].file_citation.file_id
+                file = await client.files.retrieve(file_id=file_id)
+                file_name = str(file.filename)
             except IndexError:
                 file_name = ""
 
             for annotation in annotations:
                 message_content.value = message_content.value.replace(annotation.text, '')
-
             response_message = message_content.value
-            return str(response_message + "\n" + file_name)
+            return str(response_message + file_name)
 
     @classmethod
     async def text_to_speech(cls, text: str):
