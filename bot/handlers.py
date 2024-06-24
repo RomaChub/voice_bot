@@ -20,7 +20,8 @@ class VoiceState(StatesGroup):
 async def start(message: Message, state: FSMContext):
     Events.start_event(str(message.from_user.id))
     await state.set_state(VoiceState.AWAITING_QUESTION)
-    await message.answer("Привет, я бот для ответа на голосовые сообщения")
+    await message.answer("Привет, я бот для ответа на голосовые сообщения.\n"
+                         "Введи /help , что бы увидеть все мои функции.")
 
 
 @router.message(Command("help"))
@@ -30,8 +31,8 @@ async def help(message: Message, state: FSMContext):
     help_text = (
         "Вот команды, которые я поддерживаю:\n"
         "/start - начать работу с ботом\n"
-        "/my_value - помогу найти твою ценность\n"
-        "Так же в любой момент пришли мне фото и я определю твое настроение\n"
+        "/my_value - помогу найти твою ценность.\n"
+        "Так же в любой момент пришли мне фото и я определю настроение человека.\n"
     )
     await message.answer(help_text)
 
